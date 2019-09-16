@@ -1,0 +1,5 @@
+/Debug/*
+/x64/*
+*.txt
+OOPFCM0809.vcxproj*
+*.bak
