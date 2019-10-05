@@ -13,7 +13,9 @@ class Node
 	// 成员函数
 public:
 	// constructor
-	Node()	{}
+	Node()	:available(true), shareCells(0)
+	{
+	}
 
 	Node(const int dofDimension)
 	{
@@ -21,16 +23,21 @@ public:
 	}
 
 	// Destructor
-	virtual ~Node()
+	~Node()
 	{
 		// nothing for now 
 	}
 
 	// 成员变量
 public:
-	int id;
-	double coords_[3];
-	std::vector<Dof> dofs;
+	int id;								// 结点编号
+	double coords_[3];					// 结点的坐标
+	std::vector<Dof> dofs;				// 结点上的自由度
+
+	bool available;						// 用来判断结点是否存在
+	int shareCells;						// 结点共享Cell的个数
+	std::vector<int> shareCellsId;		// 结点共享的Cell编号
+
 };
 
 

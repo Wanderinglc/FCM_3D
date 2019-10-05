@@ -15,7 +15,7 @@ public:
 	Dof(int Id) :id(Id), value(0) { }
 	Dof(int Id, double Value) :id(Id), value(Value) { }
 	// Destructor
-	virtual ~Dof()
+	~Dof()
 	{
 		// nothing for now 
 	}
