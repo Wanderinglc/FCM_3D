@@ -44,7 +44,7 @@ void FaceDirichletBoundaryCondition::modifyLinearSystem(Mesh3D* mesh, double* K,
 	std::vector<int>::iterator iterNodes = std::unique(Nodes.begin(), Nodes.end());
 	Nodes.erase(iterNodes, Nodes.end());
 
-	constrainEdges(mesh, Nodes, K, Kdiag, F, Mesh3D::Dimention);
+	constrainNodes(mesh, Nodes, K, Kdiag, F, Mesh3D::Dimention);
 
 }
 
@@ -63,7 +63,7 @@ void DirichletBoundaryCondition::constrainFaces(Mesh3D* mesh, std::vector<int>& 
 				if (direction[j] != 0)
 				{
 					ID = mesh->faceVector_[faces[i]].dofs[p * Dim + j].getId();
-					PenaltyAlgorithm->modifyLinearSystem(ID, 0.0, K, Kdiag, F);
+					PenaltyAlgorithm.modifyLinearSystem(ID, 0.0, K, Kdiag, F);
 				}
 			}			
 		}
@@ -85,7 +85,7 @@ void DirichletBoundaryCondition::constrainEdges(Mesh3D* mesh, std::vector<int>& 
 				if (direction[j] != 0)
 				{
 					ID = mesh->edgeVector_[edges[i]].dofs[p * Dim + j].getId();
-					PenaltyAlgorithm->modifyLinearSystem(ID, 0.0, K, Kdiag, F);
+					PenaltyAlgorithm.modifyLinearSystem(ID, 0.0, K, Kdiag, F);
 				}
 			}
 		}
@@ -103,7 +103,7 @@ void DirichletBoundaryCondition::constrainNodes(Mesh3D* mesh, std::vector<int>& 
 			if (direction[j] != 0)
 			{
 				ID = mesh->nodeVector_[nodes[i]].dofs[j].getId();
-				PenaltyAlgorithm->modifyLinearSystem(ID, prescribedValue[j], K, Kdiag, F);
+				PenaltyAlgorithm.modifyLinearSystem(ID, prescribedValue[j], K, Kdiag, F);
 			}
 		}
 	}

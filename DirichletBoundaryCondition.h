@@ -2,15 +2,35 @@
 #define DirichletBoundaryCondition_H
 
 #include "Mesh3D.h"
-#include "StrongPenaltyAlgorithm.h"
 
-/*---------------------------------------------------------
+/*------------------------------------------------------------------------------------------------------------------
+	罚函数法
+------------------------------------------------------------------------------------------------------------------*/
+class StrongPenaltyAlgorithm
+{
+public:
+	StrongPenaltyAlgorithm(double Penalty) :penaltyValue(Penalty) {	}
+
+	~StrongPenaltyAlgorithm() { }
+
+	void modifyLinearSystem(int dofId, double prescribedValues, double* K, int* Kdiag, double* F)
+	{
+		K[Kdiag[dofId]] += penaltyValue;
+		F[dofId] += penaltyValue * prescribedValues;
+	}
+
+
+public:
+	double penaltyValue;
+};
+
+/*------------------------------------------------------------------------------------------------------------------
 	抽象边界条件基类 
----------------------------------------------------------*/
+------------------------------------------------------------------------------------------------------------------*/
 class DirichletBoundaryCondition
 {
 public:
-	DirichletBoundaryCondition(double* pre, double* dir):PenaltyAlgorithm(nullptr)
+	DirichletBoundaryCondition(double* pre, int* dir, double Penalty):PenaltyAlgorithm(Penalty)
 	{
 		prescribedValue[0] = pre[0];
 		prescribedValue[1] = pre[1];
@@ -21,10 +41,7 @@ public:
 		direction[2] = dir[2];
 	}
 
-	virtual ~DirichletBoundaryCondition()
-	{
-
-	}	
+	virtual ~DirichletBoundaryCondition()	{ }	
 
 	virtual void modifyLinearSystem(Mesh3D* mesh, double* K, int* Kdiag, double* F) = 0;
 
@@ -36,8 +53,8 @@ public:
 
 public:
 	double prescribedValue[3];
-	double direction[3];
-	StrongPenaltyAlgorithm* PenaltyAlgorithm;
+	int direction[3];
+	StrongPenaltyAlgorithm PenaltyAlgorithm;
 };
 
 
@@ -46,14 +63,15 @@ public:
 
 
 
-/*---------------------------------------------------------
+/*------------------------------------------------------------------------------------------------------------------
 	面 位移边界条件类
----------------------------------------------------------*/
+------------------------------------------------------------------------------------------------------------------*/
 
 class FaceDirichletBoundaryCondition :public DirichletBoundaryCondition
 {
 public:
-	FaceDirichletBoundaryCondition(double*face_start, double*face_end, double* pre, double* dir) : DirichletBoundaryCondition(pre, dir)
+	FaceDirichletBoundaryCondition(double*face_start, double*face_end, double* pre, int* dir, double Penalty)
+		: DirichletBoundaryCondition(pre, dir, Penalty)
 	{
 		faceStart[0] = face_start[0];
 		faceStart[1] = face_start[1];
@@ -64,10 +82,7 @@ public:
 		faceEnd[2] = face_end[2];
 	}
 
-	~FaceDirichletBoundaryCondition()
-	{
-
-	}
+	~FaceDirichletBoundaryCondition()	{ }
 
 
 	virtual void modifyLinearSystem(Mesh3D* mesh, double* K, int* Kdiag, double* F);
@@ -82,13 +97,14 @@ public:
 
 
 
-/*---------------------------------------------------------
+/*------------------------------------------------------------------------------------------------------------------
 	边 位移边界条件类
----------------------------------------------------------*/
+------------------------------------------------------------------------------------------------------------------*/
 class EdgeDirichletBoundaryCondition :public DirichletBoundaryCondition
 {
 public:
-	EdgeDirichletBoundaryCondition(double*line_start, double*line_end, double* pre, double* dir) : DirichletBoundaryCondition(pre, dir)
+	EdgeDirichletBoundaryCondition(double*line_start, double*line_end, double* pre, int* dir, double Penalty)
+		: DirichletBoundaryCondition(pre, dir, Penalty)
 	{
 		lineStart[0] = line_start[0];
 		lineStart[1] = line_start[1];
@@ -99,10 +115,7 @@ public:
 		lineEnd[2] = line_end[2];
 	}
 
-	~EdgeDirichletBoundaryCondition()
-	{
-
-	}
+	~EdgeDirichletBoundaryCondition()	{ }
 
 
 	virtual void modifyLinearSystem(Mesh3D* mesh, double* K, int* Kdiag, double* F);
@@ -115,23 +128,21 @@ public:
 
 
 
-/*---------------------------------------------------------
+/*------------------------------------------------------------------------------------------------------------------
 	点 位移边界条件类
----------------------------------------------------------*/
+------------------------------------------------------------------------------------------------------------------*/
 class NodeDirichletBoundaryCondition :public DirichletBoundaryCondition
 {
 public:
-	NodeDirichletBoundaryCondition(double*point, double* pre, double* dir) : DirichletBoundaryCondition(pre, dir)
+	NodeDirichletBoundaryCondition(double*point, double* pre, int* dir, double Penalty)
+		: DirichletBoundaryCondition(pre, dir, Penalty)
 	{
 		position[0] = point[0];
 		position[1] = point[1];
 		position[2] = point[2];
 	}
 
-	~NodeDirichletBoundaryCondition()
-	{
-
-	}
+	~NodeDirichletBoundaryCondition()	{ }
 
 
 	virtual void modifyLinearSystem(Mesh3D* mesh, double* K, int* Kdiag, double* F);
@@ -140,7 +151,6 @@ public:
 	double position[3];
 
 };
-
 
 
 

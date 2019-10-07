@@ -7,7 +7,6 @@
 #include "EmbeddedDomain.h"
 #include "Material.h"
 #include "GaussIntegrator.h"
-#include "DirichletBoundaryCondition.h"
 #include "NeumannBoundaryCondition.h"
 
 class FiniteCellManager
@@ -39,12 +38,9 @@ public:
 
 	void calcKdiag(int *Kdiag, int *MHT, const int neq);
 
-	double* calcKsparse();
+	void calcKsparse(double* Kv, int* Kdiag, std::vector<int>& columns);
 
 	void printStiffness(const double* Kv, const int* Kdiag, const int NEQ) const;
-
-	double* calcLoadVector();
-	void assembleLoadVector(double* F, int *LM, const int NCDof);
 
 
 public:
@@ -56,8 +52,6 @@ public:
 	AbsMaterial* material;
 	GaussIntegrator* integrator;
 
-	std::vector<DirichletBoundaryCondition *> DirichletBC;
-	std::vector<NeumannBoundaryCondition *> NeumannBC;
 
 };
 

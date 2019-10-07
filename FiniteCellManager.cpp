@@ -20,23 +20,11 @@ void FiniteCellManager::generateMesh()
 }
 
 
-double* FiniteCellManager::calcKsparse()
+void FiniteCellManager::calcKsparse(double* Kv, int* Kdiag, std::vector<int>& columns)
 {
-	const int &NEQ = mesh->totalDofs;								// 总方程数
-	printf("NEQ =  %d\n", NEQ);
-	int *MHT = new int[NEQ];										// 行宽数组，总刚中每一行的宽度
-	int* Kdiag = new int[NEQ + 1];									// 对角元在一维总刚中的位置
 
-
-	std::vector<int> columns;										// 非零元素在总刚中的列下标
-
-	calcMHTandColumns(MHT, columns, mesh->polynomialDegree_);		// 形成 行宽数组 和列下标数组
-
-	calcKdiag(Kdiag, MHT, NEQ);										// 计算对角元位置数组
-
-	double* Kv = new double[NWK]();			// 总刚向量
-	double* Kc = nullptr;					// 单刚向量
-	int* LM = nullptr;
+	double* Kc = nullptr;											// 单刚向量
+	int* LM = nullptr;												// 联系数组
 	// 按单元循环，计算 Kc, 然后调用 assembleKc_To_Kv() 把单刚组集到总刚的对应位置上
 
 	for (int iele = 0; iele < mesh->totalCells_; iele++)
@@ -48,9 +36,7 @@ double* FiniteCellManager::calcKsparse()
 		delete[]Kc;
 	}
 
-	printStiffness(Kv, Kdiag, NEQ);
-
-	return Kv;
+	//printStiffness(Kv, Kdiag, NEQ);
 
 }
 
@@ -337,20 +323,5 @@ void FiniteCellManager::getShareCellLM(int* shareLM, const std::vector<int> &cel
 
 
 
-double* FiniteCellManager::calcLoadVector()
-{
-	const int &NEQ = mesh->totalDofs;								// 总方程数
-	double* Fv = new double[NEQ]();									// 总载荷向量
 
-	NeumannBoundaryCondition* NeuBC;								// 载荷边界条件指针
-	for (size_t nBC = 0; nBC < NeumannBC.size(); nBC++)
-	{
-		NeuBC = NeumannBC[nBC];
-		
-		NeuBC->calcLoadVector(mesh, Fv);
-	}
-
-
-
-}
 

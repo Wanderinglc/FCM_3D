@@ -9,15 +9,19 @@
 #include "Material.h"
 #include "GaussIntegrator.h"
 #include "FiniteCellManager.h"
+#include "NeumannBoundaryCondition.h"
+#include "DirichletBoundaryCondition.h"
+#include "QuasiStaticAnalysis.h"
+
 
 int main()
 {
 // 初始参数设置
 	double MeshOrigin[3] = { 0.0, 0.0, 0.0 };
 	double MeshLengths[3] = { 8.0, 8.0, 2.0 };
-	int Division[3] = { 2, 2, 1 };
-	int PolynomialDegree = 3;
+	int Division[3] = { 2, 2, 2 };	
 	int DofDimension = 3;
+	int PolynomialDegree = 3;
 
 	Mesh3D mesh(MeshOrigin, MeshLengths, Division, PolynomialDegree, DofDimension);	
 
@@ -37,7 +41,7 @@ int main()
 	
 
 // 测试 材料参数 矩阵	
-	double YoungModulus = 2000;
+	double YoungModulus = 200;
 	double PoissonsRatio = 0.2;
 	double Density = 1;
 	Hooke3D mat3D(YoungModulus, PoissonsRatio, Density);
@@ -102,27 +106,76 @@ int main()
 	//double* K = fcm.calcKsparse();
 
 
-	double point11[3] = { 4.0,4.0,0.0 };
-	int isNode = fcm.mesh->checkPointIsNode(point11);
-	printf("\nPoint 11 is Node: %d  (0: not a node;  1: is a node)\n", isNode);
+	//double point11[3] = { 4.0,4.0,0.0 };
+	//int isNode = fcm.mesh->checkPointIsNode(point11);
+	//printf("\nPoint 11 is Node: %d  (0: not a node;  1: is a node)\n", isNode);
 
-	double maxValue = *std::max_element(point11, point11 + 3);
-	printf("\nmax is %f\n", maxValue);
-
-
-	int* index = fcm.mesh->convertCoordinatesIntoIndices(point11);
-	printf("\nIndex are : [%d, %d, %d]\n", index[0], index[1], index[2]);
+	//double maxValue = *std::max_element(point11, point11 + 3);
+	//printf("\nmax is %f\n", maxValue);
 
 
-	double faceStart[3] = { 0.0, 0.0, 2.0 };
-	double faceEnd[3] = { 8.0, 8.0, 2.0 };
-	std::vector<int> facesId;
+	//int* index = fcm.mesh->convertCoordinatesIntoIndices(point11);
+	//printf("\nIndex are : [%d, %d, %d]\n", index[0], index[1], index[2]);
 
-	fcm.mesh->findFaces(facesId, faceStart, faceEnd);
-	for (size_t i = 0; i < facesId.size(); i++)
-	{
-		printf("face to constrain: %d\n", facesId[i]);
-	}
+
+	//double faceStart[3] = { 0.0, 0.0, 2.0 };
+	//double faceEnd[3] = { 8.0, 8.0, 2.0 };
+	//std::vector<int> facesId;
+
+	//fcm.mesh->findFaces(facesId, faceStart, faceEnd);
+	//for (size_t i = 0; i < facesId.size(); i++)
+	//{
+	//	printf("face to constrain: %d\n", facesId[i]);
+	//}
+
+	//------------------------------------------------------------------------------ ==============计算载荷向量==============
+	double tractionValue[3] = { 0.0, 100.0, 0.0 };
+	LoadFunctionObject* pLoadFunc = new  LoadFunctionObject(tractionValue);
+
+	double loadFaceStart[3] = { 0.0, 8.0, 0.0 };
+	double loadFaceEnd[3] = { 8.0, 8.0, 2.0 };
+	GaussIntegrator* pIntegrator = &integrator;
+
+	FaceNeumannBoundaryCondition NeumannBC1(loadFaceStart, loadFaceEnd, pLoadFunc, pIntegrator);
+	//double* Fv = new double[mesh.totalDofs]();
+	//NeumannBC.calcLoadVector(&mesh, Fv);
+	//printf("\nThe load vector is:\n");
+	//for (int i = 0; i < mesh.totalDofs; i++)
+	//{
+	//	printf("F[%d] = %f\n", i + 1, Fv[i]);
+	//}
+
+	double prescribedValue[3] = { 0.0,0.0,0.0 };
+	double PenaltyValue = 10E10;
+	// Symmetry Boundary Conditions
+	// XY
+	double constraintFaceStart1[3] = { 0.0, 0.0, 0.0 };
+	double constraintFaceEnd1[3] =   { 8.0, 8.0, 0.0 };
+	int fixedDirection1[3] = { 0, 0, 1 };
+	FaceDirichletBoundaryCondition DirichletBC_XY(constraintFaceStart1, constraintFaceEnd1, prescribedValue, fixedDirection1, PenaltyValue);
+	// YZ
+	double constraintFaceStart2[3] = { 8.0, 0.0, 0.0 };
+	double constraintFaceEnd2[3] =   { 8.0, 8.0, 2.0 };
+	int fixedDirection2[3] = { 1, 0, 0 };
+	FaceDirichletBoundaryCondition DirichletBC_YZ(constraintFaceStart2, constraintFaceEnd2, prescribedValue, fixedDirection2, PenaltyValue);
+	// XZ
+	double constraintFaceStart3[3] = { 0.0, 0.0, 0.0 };
+	double constraintFaceEnd3[3] =   { 8.0, 0.0, 2.0 };
+	int fixedDirection3[3] = { 0, 1, 0 };
+	FaceDirichletBoundaryCondition DirichletBC_XZ(constraintFaceStart3, constraintFaceEnd3, prescribedValue, fixedDirection3, PenaltyValue);
+
+	QuasiStaticAnalysis myAnalysis;
+
+	myAnalysis.fcManager = &fcm;
+	myAnalysis.NeumannBC.push_back(&NeumannBC1);
+	myAnalysis.DirichletBC.push_back(&DirichletBC_XY);
+	myAnalysis.DirichletBC.push_back(&DirichletBC_YZ);
+	myAnalysis.DirichletBC.push_back(&DirichletBC_XZ);
+
+	
+	myAnalysis.execute();
+
+
 
 
 

@@ -876,7 +876,7 @@ int Mesh3D::findElementByPoint(double *Coords)
 	numz = int(ceil(z * numCells[2] / lateralSize[2]));
 	if (numz > numCells[2]) numz = numCells[2];
 
-	ElementId = numx + numy * numCells[0] + numz * numCells[0] * numCells[1];
+	ElementId = numx-1 + (numy-1) * numCells[0] + (numz-1) * numCells[0] * numCells[1];
 
 	return ElementId;
 }
@@ -890,7 +890,7 @@ int Mesh3D::findElementByPoint(double *Coords)
 
 double* Mesh3D::getFaceVertexCoords(int faceId)
 {
-	double* FVC = new double[4* Mesh3D::Dimention];
+	double* FVC = new double[4* Mesh3D::Dimention]();
 	int nodeId;
 
 	for (int i = 0; i < 4; i++)
@@ -898,10 +898,11 @@ double* Mesh3D::getFaceVertexCoords(int faceId)
 		for (int j = 0; j < Mesh3D::Dimention; j++)
 		{
 			nodeId = faceVector_[faceId].nodesId[i];
-			FVC[i * 4 + j] = nodeVector_[nodeId].coords_[j];
+			FVC[i * 3 + j] = nodeVector_[nodeId].coords_[j];
+			//printf("%6.4f ", FVC[i * 4 + j]);
 		}
 	}
-
+	return FVC;
 }
 
 
@@ -915,9 +916,10 @@ double* Mesh3D::getEdgeVertexCoords(int edgeId)
 		for (int j = 0; j < Mesh3D::Dimention; j++)
 		{
 			nodeId = edgeVector_[edgeId].nodesId[i];
-			EVC[i * 4 + j] = nodeVector_[nodeId].coords_[j];
+			EVC[i * 3 + j] = nodeVector_[nodeId].coords_[j];
 		}
 	}
+	return EVC;
 }
 
 

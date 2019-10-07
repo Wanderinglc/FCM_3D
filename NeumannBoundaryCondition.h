@@ -4,27 +4,50 @@
 #include "GaussIntegrator.h"
 #include "Mesh3D.h"
 
+class LoadFunctionObject
+{
+public:
+	LoadFunctionObject(double* Value)
+	{
+		value[0] = Value[0];
+		value[1] = Value[1];
+		value[2] = Value[2];
+	}
+
+	~LoadFunctionObject()	{ }
+
+	double* operator() (const double* coords)
+	{
+		double* loadValue = new double[3];
+		loadValue[0] = value[0];
+		loadValue[1] = value[1];
+		loadValue[2] = value[2];
+		return loadValue;
+	}
+
+public:
+	double value[3];
+};
+
+
+
 class NeumannBoundaryCondition
 {
 public:
-	NeumannBoundaryCondition()
+
+	NeumannBoundaryCondition(LoadFunctionObject* loadFuc, GaussIntegrator* integrator):
+		pIntegrator(integrator), pLoadFuction(loadFuc)
 	{
 
 	}
 
-	virtual ~NeumannBoundaryCondition()
-	{
-
-	}
-
+	virtual ~NeumannBoundaryCondition()	 { }
 
 	virtual void calcLoadVector(Mesh3D* mesh, double* F) = 0;
 
 
-
-
-
 public:
+	LoadFunctionObject* pLoadFuction;
 	GaussIntegrator* pIntegrator;
 };
 
@@ -38,7 +61,8 @@ public:
 class FaceNeumannBoundaryCondition:public NeumannBoundaryCondition
 {
 public:
-	FaceNeumannBoundaryCondition(double*face_start, double*face_end):NeumannBoundaryCondition()
+	FaceNeumannBoundaryCondition(double*face_start, double*face_end, LoadFunctionObject* loadFuc, GaussIntegrator* integrator):
+		NeumannBoundaryCondition(loadFuc, integrator)
 	{
 		faceStart[0] = face_start[0];
 		faceStart[1] = face_start[1];
@@ -49,10 +73,7 @@ public:
 		faceEnd[2] = face_end[2];
 	}
 
-	~FaceNeumannBoundaryCondition()
-	{
-
-	}
+	~FaceNeumannBoundaryCondition()	 { }
 
 	virtual void calcLoadVector(Mesh3D* mesh, double* F);
 
@@ -61,8 +82,6 @@ public:
 	double faceStart[3];
 	double faceEnd[3];
 };
-
-
 
 
 
